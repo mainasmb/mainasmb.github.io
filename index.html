@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototype CAMPUS-RIDE</title>
+    <style>
+        /* --- CSS : STYLES GÉNÉRAUX --- */
+        :root {
+            --primary-color: #4a90e2; /* Bleu Campus */
+            --secondary-color: #f5f7fa;
+            --text-color: #333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #e9ecef;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Simulation du téléphone */
+        #phone-mockup {
+            width: 375px;
+            height: 667px;
+            background-color: white;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+            border: 10px solid #333;
+        }
+
+        /* En-tête de l'app */
+        .app-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        /* Conteneur des écrans */
+        .screen-container {
+            padding: 20px;
+            height: calc(100% - 60px); /* Hauteur totale moins header */
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        /* Gestion de l'affichage des écrans */
+        .screen {
+            display: none; /* Caché par défaut */
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex; /* Affiché si actif */
+            flex-direction: column;
+        }
+
+        /* Éléments de formulaire et boutons */
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="datetime-local"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box; /* Important pour le padding */
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: auto; /* Pousse le bouton vers le bas */
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        /* --- STYLES SPÉCIFIQUES AUX ÉCRANS --- */
+
+        /* Écran Liste des bus (Cartes) */
+        .bus-card {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .bus-card h3 {
+            margin: 0 0 10px 0;
+        }
+
+        .bus-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .bus-card button {
+            margin-top: 10px;
+            padding: 10px;
+            margin-bottom: 0;
+        }
+
+        /* Écran Confirmation (Récapitulatif) */
+        .summary-box {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Écran Suivi (Carte simulée) */
+        #map-container {
+            height: 400px;
+            background-color: #e9ecef;
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, #fff 20px, #fff 22px),
+                              repeating-linear-gradient(90deg, transparent, transparent 20px, #fff 20px, #fff 22px);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+
+        #bus-marker {
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            transition: all 3s ease-in-out;
+        }
+
+        .destination-marker {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: var(--danger-color);
+        }
+
+        /* Écran Chauffeur */
+        .driver-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn-start { background-color: var(--success-color); }
+        .btn-start:hover { background-color: #218838; }
+        .btn-stop { background-color: var(--danger-color); }
+        .btn-stop:hover { background-color: #c82333; }
+
+        #gps-status {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Contrôle externe pour la démo */
+        #demo-controls {
+            margin-top: 20px;
+        }
+        #demo-controls button {
+            width: auto;
+            padding: 10px 20px;
+            background-color: #6c757d;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Simulation de l'écran du téléphone -->
+    <div id="phone-mockup">
+        <div class="app-header">CAMPUS-RIDE</div>
+        
+        <div class="screen-container">
+
+            <!-- ----- ÉCRAN 1 : CONNEXION ----- -->
+            <div id="screen-login" class="screen active">
+                <h2>Connexion Étudiant</h2>
+                <div class="form-group">
+                    <label for="email">Email universitaire</label>
+                    <input type="email" id="email" placeholder="etudiant@université.fr">
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                <button id="btn-login">Se connecter</button>
+            </div>
+
+
+            <!-- ----- ÉCRAN 2 : RECHERCHE DE TRAJET ----- -->
+            <div id="screen-search" class="screen">
+                <h2>Rechercher un trajet</h2>
+                <div class="form-group">
+                    <label for="depart">Point de départ</label>
+                    <select id="depart">
+                        <option>Résidence Universitaire A</option>
+                        <option>Gare Centrale</option>
+                        <option>Campus Sud</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="destination">Destination</label>
+                    <select id="destination">
+                        <option>Campus Principal (Sciences)</option>
+                        <option>Bibliothèque Universitaire</option>
+                        <option>Campus Est (Lettres)</option>
+                    </select>
+                </div>
+                 <div class="form-group">
+                    <label for="horaire">Horaire souhaité</label>
+                    <input type="datetime-local" id="horaire">
+                </div>
+                <button id="btn-search">Rechercher</button>
+            </div>
+
+
+            <!-- ----- ÉCRAN 3 : LISTE DES BUS ----- -->
+            <div id="screen-list" class="screen">
+                <h2>Bus disponibles</h2>
+                
+                <!-- Bus 1 -->
+                <div class="bus-card">
+                    <h3>Navette N°42 (Express)</h3>
+                    <div class="bus-info">
+                        <span>Départ: 08h15</span>
+                        <span>Arrivée: 08h35</span>
+                    </div>
+                     <div class="bus-info">
+                        <span style="color: var(--success-color);">8 places disponibles</span>
+                    </div>
+                    <button class="btn-reserve">Réserver ce bus</button>
+                </div>
+
+                <!-- Bus 2 -->
+                <div class="bus-card">
+                    <h3>Navette N°12 (Standard)</h3>
+                    <div class="bus-info">
+                        <span>Départ: 08h30</span>
+                        <span>Arrivée: 09h00</span>
+                    </div>
+                     <div class="bus-info">
+                        <span style="color: orange;">3 places disponibles</span>
+                    </div>
+                    <button class="btn-reserve">Réserver ce bus</button>
+                </div>
+
+                 <!-- Bus 3 -->
+                 <div class="bus-card">
+                    <h3>Navette N°18</h3>
+                    <div class="bus-info">
+                        <span>Départ: 08h45</span>
+                        <span>Arrivée: 09h15</span>
+                    </div>
+                     <div class="bus-info">
+                        <span style="color: var(--success-color);">12 places disponibles</span>
+                    </div>
+                    <button class="btn-reserve">Réserver ce bus</button>
+                </div>
+            </div>
+
+
+            <!-- ----- ÉCRAN 4 : CONFIRMATION ----- -->
+            <div id="screen-confirm" class="screen">
+                <h2>Confirmation</h2>
+                <p>Veuillez vérifier les détails de votre réservation.</p>
+                
+                <div class="summary-box">
+                    <h3>Navette N°42 (Express)</h3>
+                    <p><strong>Départ :</strong> Résidence Universitaire A<br>
+                    <strong>Destination :</strong> Campus Principal<br>
+                    <strong>Horaire :</strong> Aujourd'hui à 08h15<br>
+                    <strong>Passager :</strong> 1 Étudiant</p>
+                </div>
+                
+                <button id="btn-confirm-final">Confirmer la réservation</button>
+            </div>
+
+
+            <!-- ----- ÉCRAN 5 : SUIVI DU BUS ----- -->
+            <div id="screen-tracking" class="screen">
+                <h2>Suivi en temps réel</h2>
+                <p>Votre bus est en route vers le point de départ.</p>
+                
+                <div id="map-container">
+                    <div class="destination-marker">📍</div>
+                    <!-- Le bus qui bougera -->
+                    <div id="bus-marker"></div>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <p>Arrivée estimée dans <strong>4 minutes</strong></p>
+                </div>
+                <!-- Pas de bouton de navigation ici, c'est la fin du flux étudiant -->
+            </div>
+
+
+            <!-- ----- ÉCRAN 6 : INTERFACE CHAUFFEUR ----- -->
+            <div id="screen-driver" class="screen">
+                <h2>Espace Chauffeur</h2>
+                <p>Navette N°42 - Trajet en attente</p>
+
+                <div class="driver-controls">
+                    <button id="btn-driver-start" class="btn-start">Démarrer le trajet</button>
+                    <button id="btn-driver-stop" class="btn-stop" disabled>Terminer le trajet</button>
+                </div>
+
+                <div id="gps-status">
+                   Statut GPS : 🔴 Inactif
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Boutons externes pour la démonstration -->
+    <div id="demo-controls">
+        <button id="btn-toggle-mode">Basculer Mode Étudiant / Chauffeur</button>
+    </div>
+
+
+    <script>
+        /* --- JAVASCRIPT : LOGIQUE INTERACTIVE --- */
+
+        // Fonction utilitaire pour naviguer entre les écrans
+        function navigateTo(screenId) {
+            // 1. Cacher l'écran actuel
+            const currentScreen = document.querySelector('.screen.active');
+            if (currentScreen) {
+                currentScreen.classList.remove('active');
+            }
+
+            // 2. Afficher le nouvel écran
+            const nextScreen = document.getElementById(screenId);
+            if (nextScreen) {
+                nextScreen.classList.add('active');
+            }
+            
+            // Scroll en haut du nouvel écran
+            document.querySelector('.screen-container').scrollTop = 0;
+
+            // Actions spécifiques lors de l'arrivée sur certains écrans
+            if (screenId === 'screen-tracking') {
+                startBusAnimation();
+            }
+        }
+
+        // --- NAVIGATION FLUX ÉTUDIANT ---
+
+        // Écran 1 -> Écran 2 (Connexion -> Recherche)
+        document.getElementById('btn-login').addEventListener('click', function() {
+            // (Ici, on pourrait ajouter une validation d'email/mot de passe)
+            navigateTo('screen-search');
+        });
+
+        // Écran 2 -> Écran 3 (Recherche -> Liste)
+        document.getElementById('btn-search').addEventListener('click', function() {
+            navigateTo('screen-list');
+        });
+
+        // Écran 3 -> Écran 4 (Liste -> Confirmation)
+        // On attache l'événement à tous les boutons "Réserver"
+        const reserveButtons = document.querySelectorAll('.btn-reserve');
+        reserveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                navigateTo('screen-confirm');
+            });
+        });
+
+        // Écran 4 -> Écran 5 (Confirmation -> Suivi)
+        document.getElementById('btn-confirm-final').addEventListener('click', function() {
+            navigateTo('screen-tracking');
+        });
+
+
+        // --- LOGIQUE ÉCRAN DE SUIVI (Animation) ---
+        function startBusAnimation() {
+            const bus = document.getElementById('bus-marker');
+            // Réinitialiser la position
+            bus.style.left = '20px';
+            bus.style.bottom = '20px';
+            
+            // Petite pause avant de démarrer l'animation pour que la transition CSS fonctionne
+            setTimeout(() => {
+                 // Simuler un déplacement vers la destination (haut droite)
+                bus.style.left = 'calc(100% - 50px)';
+                bus.style.bottom = 'calc(100% - 60px)';
+            }, 500);
+        }
+
+
+        // --- LOGIQUE INTERFACE CHAUFFEUR ---
+        const gpsStatusDiv = document.getElementById('gps-status');
+        const btnStart = document.getElementById('btn-driver-start');
+        const btnStop = document.getElementById('btn-driver-stop');
+        let gpsInterval;
+
+        btnStart.addEventListener('click', function() {
+            gpsStatusDiv.innerHTML = 'Statut GPS : 🟢 Actif - Envoi de la position...';
+            btnStart.disabled = true;
+            btnStart.style.opacity = '0.5';
+            btnStop.disabled = false;
+            btnStop.style.opacity = '1';
+
+            // Simulation de mise à jour GPS
+            gpsInterval = setInterval(() => {
+                const lat = (48.85 + (Math.random() * 0.01)).toFixed(4);
+                const lng = (2.35 + (Math.random() * 0.01)).toFixed(4);
+                gpsStatusDiv.innerHTML = `Statut GPS : 🟢 Actif <br> Position : ${lat}, ${lng}`;
+            }, 2000);
+        });
+
+        btnStop.addEventListener('click', function() {
+            clearInterval(gpsInterval);
+            gpsStatusDiv.innerHTML = 'Statut GPS : 🔴 Inactif - Trajet terminé';
+            btnStart.disabled = false;
+            btnStart.style.opacity = '1';
+            btnStop.disabled = true;
+            btnStop.style.opacity = '0.5';
+        });
+
+
+        // --- CONTRÔLES DE DÉMONSTRATION (Toggle Mode) ---
+        let isStudentMode = true;
+        document.getElementById('btn-toggle-mode').addEventListener('click', function() {
+            if (isStudentMode) {
+                // Passer en mode chauffeur
+                navigateTo('screen-driver');
+                document.querySelector('.app-header').textContent = 'CAMPUS-RIDE (Chauffeur)';
+            } else {
+                // Retourner au début du mode étudiant
+                navigateTo('screen-login');
+                document.querySelector('.app-header').textContent = 'CAMPUS-RIDE';
+            }
+            isStudentMode = !isStudentMode;
+        });
+
+        // Initialisation de la date dans le champ recherche pour l'UX
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('horaire').value = now.toISOString().slice(0,16);
+
+    </script>
+</body>
+</html>
